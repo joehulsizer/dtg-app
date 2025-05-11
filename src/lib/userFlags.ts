@@ -31,3 +31,32 @@ export function listenDtg(uid: string, cb: (eventIds: string[]) => void) {
     cb((snap.data()?.dtg as string[] | undefined) ?? []);
   });
 }
+
+/** Turn RECOMMENDED ON or OFF for the current user */
+export async function setRecommendFlag(opts: {
+    uid: string;
+    artistId: string;
+    on: boolean;
+  }) {
+    const ref = doc(db, "users", opts.uid);
+    await setDoc(
+      ref,
+      {
+        recommended: opts.on
+          ? arrayUnion(opts.artistId)
+          : arrayRemove(opts.artistId),
+      },
+      { merge: true },
+    );
+  }
+  
+  /** Live-listen to recommended list for the current user */
+  export function listenRecommended(
+    uid: string,
+    cb: (artistIds: string[]) => void,
+  ) {
+    return onSnapshot(doc(db, "users", uid), (snap) => {
+      cb((snap.data()?.recommended as string[] | undefined) ?? []);
+    });
+  }
+  

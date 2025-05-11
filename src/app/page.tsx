@@ -57,8 +57,12 @@ export default function Home() {
           onClick={() => signOut(auth)}
           className="rounded bg-gray-800 px-3 py-1.5 text-white"
         >
+
           Sign out
         </button>
+        <a href="/profile" className="underline text-blue-600 text-sm">
+            Profile
+          </a>
       </header>
 
       {/* Add-event form */}
