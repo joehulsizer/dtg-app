@@ -3,18 +3,34 @@
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { addEvent, listenEvents, EventDoc } from "@/lib/events";
 
 export default function Home() {
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [user, setUser] = useState<{ uid: string; name: string } | null>(null);
+  const [events, setEvents] = useState<EventDoc[]>([]);
 
+  /* 1️⃣  watch Google auth state */
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
-      if (u) setUser({ name: u.displayName ?? "Anonymous" });
-      else   setUser(null);
+      if (u) setUser({ uid: u.uid, name: u.displayName ?? "Anonymous" });
+      else setUser(null);
     });
   }, []);
 
-  if (!user) {
+  /* 2️⃣  once logged in, start live-listening to events */
+  useEffect(() => {
+    if (!user) return;
+    const unsub = listenEvents(setEvents);
+    return unsub;          // cleanup on unmount
+  }, [user]);
+
+  /* 3️⃣  local form state */
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [venue, setVenue] = useState("");
+
+  /* 4️⃣  if not logged in, show login link */
+  if (!user)
     return (
       <div className="flex h-screen items-center justify-center">
         <a href="/login" className="underline text-blue-600">
@@ -22,17 +38,74 @@ export default function Home() {
         </a>
       </div>
     );
-  }
 
+  /* 5️⃣  logged-in UI */
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl">Hello, {user.name}</h1>
-      <button
-        onClick={() => signOut(auth)}
-        className="rounded bg-gray-800 px-4 py-2 text-white"
+    <div className="mx-auto max-w-xl p-6 space-y-8">
+      {/* Header */}
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Hello, {user.name}</h1>
+        <button
+          onClick={() => signOut(auth)}
+          className="rounded bg-gray-800 px-3 py-1.5 text-white"
+        >
+          Sign out
+        </button>
+      </header>
+
+      {/* Add-event form */}
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await addEvent({ title, date, venue, uid: user.uid });
+          // clear form
+          setTitle("");
+          setDate("");
+          setVenue("");
+        }}
+        className="grid gap-4 border p-4 rounded"
       >
-        Sign out
-      </button>
+        <h2 className="font-medium">Add dummy event</h2>
+        <input
+          required
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
+        <input
+          required
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
+        <input
+          required
+          placeholder="Venue"
+          value={venue}
+          onChange={(e) => setVenue(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
+        <button className="rounded bg-blue-600 py-1.5 text-white">
+          Save
+        </button>
+      </form>
+
+      {/* Event list */}
+      <section className="space-y-2">
+        {events.map((ev) => (
+          <div
+            key={ev.id}
+            className="rounded border px-3 py-2 flex flex-col gap-0.5"
+          >
+            <span className="font-medium">{ev.title}</span>
+            <span className="text-sm">
+              {ev.venue} — {ev.date.toDate().toLocaleDateString()}
+            </span>
+          </div>
+        ))}
+      </section>
     </div>
   );
 }
