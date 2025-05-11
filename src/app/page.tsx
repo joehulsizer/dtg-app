@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { addEvent, listenEvents, EventDoc } from "@/lib/events";
+import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 
 export default function Home() {
   const [user, setUser] = useState<{ uid: string; name: string } | null>(null);
   const [events, setEvents] = useState<EventDoc[]>([]);
+  const [dtgIds, setDtgIds] = useState<string[]>([]);
 
   /* 1️⃣  watch Google auth state */
   useEffect(() => {
@@ -24,6 +26,12 @@ export default function Home() {
     return unsub;          // cleanup on unmount
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const unsub = listenDtg(user.uid, setDtgIds);
+    return unsub;
+  }, [user]);
+  
   /* 3️⃣  local form state */
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -92,20 +100,38 @@ export default function Home() {
         </button>
       </form>
 
-      {/* Event list */}
-      <section className="space-y-2">
-        {events.map((ev) => (
+      /* Event list */
+    <section className="space-y-2">
+      {events.map((ev) => {
+        const isDtg = dtgIds.includes(ev.id);
+        return (
           <div
             key={ev.id}
-            className="rounded border px-3 py-2 flex flex-col gap-0.5"
+            className={`rounded border px-3 py-2 flex items-center justify-between ${
+              isDtg ? "bg-green-50 border-green-400" : ""
+            }`}
           >
-            <span className="font-medium">{ev.title}</span>
-            <span className="text-sm">
-              {ev.venue} — {ev.date.toDate().toLocaleDateString()}
-            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">{ev.title}</span>
+              <span className="text-sm">
+                {ev.venue} — {ev.date.toDate().toLocaleDateString()}
+              </span>
+            </div>
+            <button
+              onClick={() =>
+                setDtgFlag({ uid: user.uid, eventId: ev.id, on: !isDtg })
+              }
+              className={`rounded px-2 py-1 text-sm ${
+                isDtg ? "bg-green-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              ⚡ DTG
+            </button>
           </div>
-        ))}
-      </section>
+        );
+      })}
+    </section>
+
     </div>
   );
 }
