@@ -9,6 +9,8 @@ import {
   Timestamp,
 } from "firebase/firestore";
 
+type EventData = Omit<EventDoc, "id">;
+
 export type EventDoc = {
   id: string;
   title: string;
@@ -41,7 +43,7 @@ export function listenEvents(cb: (events: EventDoc[]) => void) {
     (snap) => {
       const evts = snap.docs.map((d) => ({
         id: d.id,
-        ...(d.data() as EventDoc),
+        ...(d.data() as EventData),
       }));
       cb(evts);
     },
