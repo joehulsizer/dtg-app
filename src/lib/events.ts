@@ -1,4 +1,3 @@
-// src/lib/events.ts
 import { db } from "@/lib/firebase";
 import {
   collection,
@@ -15,22 +14,25 @@ export type EventDoc = {
   title: string;
   date: Timestamp;
   venue: string;
+  artistId: string;
   createdByUid: string;
 };
 
 /** Add a new event */
 export async function addEvent(opts: {
   title: string;
-  date: string;   // "YYYY-MM-DD"
+  date: string;          // YYYY-MM-DD
   venue: string;
+  artistId: string;
   uid: string;
 }) {
   await addDoc(collection(db, "events"), {
     ...opts,
-    date: new Date(opts.date),      // convert to JS Date → Firestore Timestamp
+    date: new Date(opts.date),
     createdAt: serverTimestamp(),
   });
 }
+
 
 /** Real-time listener (calls cb every time data changes) */
 export function listenEvents(cb: (events: EventDoc[]) => void) {

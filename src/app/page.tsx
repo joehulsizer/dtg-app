@@ -5,11 +5,14 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { addEvent, listenEvents, EventDoc } from "@/lib/events";
 import { setDtgFlag, listenDtg } from "@/lib/userFlags";
+import { ARTISTS } from "@/lib/artists";
+import { listenAllUsers, UserDoc } from "@/lib/userFlags";
 
 export default function Home() {
   const [user, setUser] = useState<{ uid: string; name: string } | null>(null);
   const [events, setEvents] = useState<EventDoc[]>([]);
   const [dtgIds, setDtgIds] = useState<string[]>([]);
+  const [allUsers, setAllUsers] = useState<UserDoc[]>([]);
 
   /* 1️⃣  watch Google auth state */
   useEffect(() => {
@@ -31,12 +34,19 @@ export default function Home() {
     const unsub = listenDtg(user.uid, setDtgIds);
     return unsub;
   }, [user]);
+
+  useEffect(() => {
+    const unsub = listenAllUsers(setAllUsers);
+    return unsub;
+  }, []);
   
   /* 3️⃣  local form state */
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [venue, setVenue] = useState("");
+  const [artistId, setArtistId] = useState("");
 
+  
   /* 4️⃣  if not logged in, show login link */
   if (!user)
     return (
@@ -69,11 +79,12 @@ export default function Home() {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          await addEvent({ title, date, venue, uid: user.uid });
+          await addEvent({ title, date, venue, artistId, uid: user.uid });
           // clear form
           setTitle("");
           setDate("");
           setVenue("");
+          setArtistId("");
         }}
         className="grid gap-4 border p-4 rounded"
       >
@@ -99,6 +110,20 @@ export default function Home() {
           onChange={(e) => setVenue(e.target.value)}
           className="border px-2 py-1 rounded"
         />
+        <select
+          required
+          value={artistId}
+          onChange={(e) => setArtistId(e.target.value)}
+          className="border px-2 py-1 rounded"
+        >
+          <option value="">— choose artist —</option>
+          {ARTISTS.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+
         <button className="rounded bg-blue-600 py-1.5 text-white">
           Save
         </button>
@@ -107,7 +132,12 @@ export default function Home() {
       /* Event list */
     <section className="space-y-2">
       {events.map((ev) => {
-        const isDtg = dtgIds.includes(ev.id);
+          const dtgCount = allUsers.filter((u) => u.dtg?.includes(ev.id)).length;
+          const recCount = allUsers.filter((u) =>
+            u.recommended?.includes(ev.artistId),
+          ).length;
+
+          const isDtg = dtgIds.includes(ev.id);
         return (
           <div
             key={ev.id}
@@ -115,12 +145,15 @@ export default function Home() {
               isDtg ? "bg-green-50 border-green-400" : ""
             }`}
           >
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">{ev.title}</span>
-              <span className="text-sm">
+            <div className="flex flex-col">
+            <span className="font-medium">{ev.title}</span>
+            <span className="text-sm">
                 {ev.venue} — {ev.date.toDate().toLocaleDateString()}
               </span>
-            </div>
+            <span className="text-xs text-gray-600">
+              {recCount} friends recommend&nbsp;&middot;&nbsp;{dtgCount} friends DTG
+            </span>
+          </div>
             <button
               onClick={() =>
                 setDtgFlag({ uid: user.uid, eventId: ev.id, on: !isDtg })

@@ -5,6 +5,7 @@ import {
   arrayUnion,
   arrayRemove,
   onSnapshot,
+  collection,
 } from "firebase/firestore";
 
 /** Turn DTG ON or OFF for the current user.
@@ -60,3 +61,22 @@ export async function setRecommendFlag(opts: {
     });
   }
   
+  /** Listen to *all* users (tiny data set, fine for MVP) */
+  export function listenAllUsers(cb: (users: UserDoc[]) => void) {
+    return onSnapshot(collection(db, "users"), (snap) => {
+      cb(
+        snap.docs.map((d) => ({
+          uid: d.id,
+          ...(d.data() as Omit<UserDoc, "uid">),
+        })),
+      );
+    });
+  }
+  export type UserDoc = {
+    uid: string;
+    dtg?: string[];
+    recommended?: string[];
+  };
+
+
+    
