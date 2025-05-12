@@ -7,6 +7,7 @@ import { addEvent, listenEvents, EventDoc } from "@/lib/events";
 import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 import { ARTISTS } from "@/lib/artists";
 import { listenAllUsers, UserDoc } from "@/lib/userFlags";
+import Link from "next/link";
 
 export default function Home() {
   const [user, setUser] = useState<{ uid: string; name: string } | null>(null);
@@ -141,7 +142,12 @@ export default function Home() {
             }`}
           >
             <div className="flex flex-col">
-            <span className="font-medium">{ev.title}</span>
+            <Link
+              href={`/event/${ev.id}`}
+              className="font-medium underline-offset-2 hover:underline"
+            >
+              {ev.title}
+            </Link>
             <span className="text-sm">
                 {ev.venue} — {ev.date.toDate().toLocaleDateString()}
               </span>
