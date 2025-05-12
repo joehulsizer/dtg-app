@@ -14,7 +14,6 @@ export default function Home() {
   const [dtgIds, setDtgIds] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<UserDoc[]>([]);
 
-  /* 1️⃣  watch Google auth state */
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
       if (u) setUser({ uid: u.uid, name: u.displayName ?? "Anonymous" });
@@ -22,11 +21,10 @@ export default function Home() {
     });
   }, []);
 
-  /* 2️⃣  once logged in, start live-listening to events */
   useEffect(() => {
     if (!user) return;
     const unsub = listenEvents(setEvents);
-    return unsub;          // cleanup on unmount
+    return unsub;          
   }, [user]);
 
   useEffect(() => {
@@ -40,14 +38,12 @@ export default function Home() {
     return unsub;
   }, []);
   
-  /* 3️⃣  local form state */
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [venue, setVenue] = useState("");
   const [artistId, setArtistId] = useState("");
 
   
-  /* 4️⃣  if not logged in, show login link */
   if (!user)
     return (
       <div className="flex h-screen items-center justify-center">
@@ -57,7 +53,6 @@ export default function Home() {
       </div>
     );
 
-  /* 5️⃣  logged-in UI */
   return (
     <div className="mx-auto max-w-xl p-6 space-y-8">
       {/* Header */}
@@ -129,9 +124,9 @@ export default function Home() {
         </button>
       </form>
 
-      /* Event list */
-    <section className="space-y-2">
-      {events.map((ev) => {
+      {/* Event list */}
+      <section className="space-y-2">
+        {events.map((ev) => {
           const dtgCount = allUsers.filter((u) => u.dtg?.includes(ev.id)).length;
           const recCount = allUsers.filter((u) =>
             u.recommended?.includes(ev.artistId),
