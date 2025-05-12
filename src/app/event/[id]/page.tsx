@@ -22,6 +22,14 @@ export default function EventPage() {
   const [uid, setUid]     = useState<string | null>(null);
   const [isDtg, setIsDtg] = useState(false);
 
+
+  const [copied, setCopied] = useState(false);
+const handleCopy = async () => {
+  await navigator.clipboard.writeText(window.location.href);
+  setCopied(true);
+  setTimeout(() => setCopied(false), 2000);
+};
+
   /* authenticate silently so we can toggle DTG */
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => setUid(u ? u.uid : null));
@@ -78,6 +86,17 @@ export default function EventPage() {
           ⚡ {isDtg ? "DTG (on)" : "DTG (off)"}
         </button>
       )}
+            <button
+                onClick={handleCopy}
+                className="rounded bg-blue-600 px-4 py-2 text-white"
+            >
+                Copy link 📋
+            </button>
+
+            {copied && (
+                <span className="text-sm text-green-600">Link copied!</span>
+            )}
+
     </div>
   );
 }
