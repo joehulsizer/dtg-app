@@ -8,6 +8,8 @@ import {
   Timestamp,
 } from "firebase/firestore";
 
+type ReviewData = Omit<ReviewDoc, "id">;
+
 export type ReviewDoc = {
   id: string;
   uid: string;
@@ -41,7 +43,7 @@ export function listenReviews(
     ),
     (snap) => {
       cb(
-        snap.docs.map((d) => ({ id: d.id, ...(d.data() as ReviewDoc) })),
+        snap.docs.map((d) => ({ id: d.id, ...(d.data() as ReviewData) })),
       );
     },
   );
