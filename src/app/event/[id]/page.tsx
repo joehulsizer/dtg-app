@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { listenAllUsers, UserDoc } from "@/lib/userFlags";
 
 /** Runtime type for one event (client side only) */
 type EventView = {
@@ -14,6 +15,7 @@ type EventView = {
   title: string;
   venue: string;
   date: string;     // formatted for display
+  artistId: string;
 };
 
 export default function EventPage() {
@@ -21,6 +23,7 @@ export default function EventPage() {
   const [event, setEvent] = useState<EventView | null>(null);
   const [uid, setUid]     = useState<string | null>(null);
   const [isDtg, setIsDtg] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserDoc[]>([]);
 
 
   const [copied, setCopied] = useState(false);
@@ -35,6 +38,11 @@ const handleCopy = async () => {
     return onAuthStateChanged(auth, (u) => setUid(u ? u.uid : null));
   }, []);
 
+  useEffect(() => {
+    const unsub = listenAllUsers(setAllUsers);
+    return unsub;
+  }, []);
+  
   /* fetch the event once */
   useEffect(() => {
     async function run() {
@@ -46,6 +54,7 @@ const handleCopy = async () => {
         title: d.title,
         venue: d.venue,
         date: new Date(d.date.seconds * 1000).toLocaleDateString(),
+        artistId: d.artistId,
       });
     }
     run();
@@ -65,10 +74,17 @@ const handleCopy = async () => {
       </div>
     );
   }
-
+  const dtgCount = allUsers.filter((u) => u.dtg?.includes(event.id)).length;
+  const recCount = allUsers.filter((u) =>
+    u.recommended?.includes(event.artistId)
+  ).length;
+  
   return (
     <div className="mx-auto max-w-lg p-8 space-y-6">
       <h1 className="text-2xl font-semibold">{event.title}</h1>
+      <p className="text-sm text-gray-600">
+  {recCount} friends recommend&nbsp;&middot;&nbsp;{dtgCount} friends DTG
+</p>
 
       <p className="text-gray-700">
         {event.venue} — {event.date}
