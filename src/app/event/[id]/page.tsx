@@ -8,6 +8,7 @@ import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { listenAllUsers, UserDoc } from "@/lib/userFlags";
+import { addReview, listenReviews, ReviewDoc } from "@/lib/reviews";
 
 /** Runtime type for one event (client side only) */
 type EventView = {
@@ -24,7 +25,10 @@ export default function EventPage() {
   const [uid, setUid]     = useState<string | null>(null);
   const [isDtg, setIsDtg] = useState(false);
   const [allUsers, setAllUsers] = useState<UserDoc[]>([]);
-
+  const [reviews, setReviews] = useState<ReviewDoc[]>([]);
+  const [stars, setStars]   = useState(5);
+  const [comment, setComment] = useState("");
+  
 
   const [copied, setCopied] = useState(false);
 const handleCopy = async () => {
@@ -42,6 +46,12 @@ const handleCopy = async () => {
     const unsub = listenAllUsers(setAllUsers);
     return unsub;
   }, []);
+  
+  useEffect(() => {
+    if (!event) return;
+    const unsub = listenReviews(event.id, setReviews);
+    return unsub;
+  }, [event]);
   
   /* fetch the event once */
   useEffect(() => {
@@ -112,6 +122,54 @@ const handleCopy = async () => {
             {copied && (
                 <span className="text-sm text-green-600">Link copied!</span>
             )}
+        {uid && (
+            <form
+                onSubmit={async (e) => {
+                e.preventDefault();
+                await addReview({ eventId: event.id, uid, stars, comment });
+                setStars(5);
+                setComment("");
+                }}
+                className="space-y-2 border-t pt-4"
+            >
+                <h2 className="font-medium">Leave a review</h2>
+                {/* star select */}
+                <select
+                value={stars}
+                onChange={(e) => setStars(Number(e.target.value))}
+                className="border px-2 py-1 rounded"
+                >
+                {[5, 4, 3, 2, 1].map((n) => (
+                    <option key={n} value={n}>
+                    {n} star{n > 1 && "s"}
+                    </option>
+                ))}
+                </select>
+                {/* comment */}
+                <textarea
+                required
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full border rounded px-2 py-1"
+                rows={3}
+                placeholder="What stood out to you?"
+                />
+                <button className="rounded bg-blue-600 px-4 py-1.5 text-white">
+                Save
+                </button>
+            </form>
+            )}
+            <section className="mt-6 space-y-4">
+  {reviews.map((r) => (
+    <div key={r.id} className="border-b pb-2">
+      <span className="text-yellow-500">
+        {"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}
+      </span>
+      <p className="whitespace-pre-line">{r.comment}</p>
+    </div>
+  ))}
+</section>
+
 
     </div>
   );
