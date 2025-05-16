@@ -6,7 +6,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { addEvent, listenEvents, EventDoc } from "@/lib/events";
 import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 import { ARTISTS } from "@/lib/artists";
-import { listenAllUsers, UserDoc } from "@/lib/userFlags";
+import { listenAllUsers, UserDoc, listenFollowing } from "@/lib/userFlags";
 import Link from "next/link";
 
 export default function Home() {
@@ -14,6 +14,7 @@ export default function Home() {
   const [events, setEvents] = useState<EventDoc[]>([]);
   const [dtgIds, setDtgIds] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<UserDoc[]>([]);
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
@@ -34,6 +35,12 @@ export default function Home() {
     return unsub;
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const unsub = listenFollowing(user.uid, setFollowingIds);
+    return unsub;
+  }, [user]);
+  
   useEffect(() => {
     const unsub = listenAllUsers(setAllUsers);
     return unsub;
@@ -128,10 +135,19 @@ export default function Home() {
       {/* Event list */}
       <section className="space-y-2">
         {events.map((ev) => {
-          const dtgCount = allUsers.filter((u) => u.dtg?.includes(ev.id)).length;
-          const recCount = allUsers.filter((u) =>
-            u.recommended?.includes(ev.artistId),
+          // choose which users to include
+          const visibleUsers =
+          followingIds.length === 0
+            ? allUsers
+            : allUsers.filter(
+                (u) => u.uid === user.uid || followingIds.includes(u.uid),
+              );
+
+          const dtgCount = visibleUsers.filter((u) => u.dtg?.includes(ev.id)).length;
+          const recCount = visibleUsers.filter((u) =>
+          u.recommended?.includes(ev.artistId),
           ).length;
+
 
           const isDtg = dtgIds.includes(ev.id);
         return (

@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { listenAllUsers, UserDoc } from "@/lib/userFlags";
+import { listenAllUsers, UserDoc, listenFollowing } from "@/lib/userFlags";
 import { addReview, listenReviews, ReviewDoc } from "@/lib/reviews";
 
 /** Runtime type for one event (client side only) */
@@ -28,7 +28,8 @@ export default function EventPage() {
   const [reviews, setReviews] = useState<ReviewDoc[]>([]);
   const [stars, setStars]   = useState(5);
   const [comment, setComment] = useState("");
-  
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
+
 
   const [copied, setCopied] = useState(false);
 const handleCopy = async () => {
@@ -77,6 +78,13 @@ const handleCopy = async () => {
     return unsub;
   }, [uid, id]);
 
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = listenFollowing(uid, setFollowingIds);
+    return unsub;
+  }, [uid]);
+  
+
   if (!event) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -84,10 +92,18 @@ const handleCopy = async () => {
       </div>
     );
   }
-  const dtgCount = allUsers.filter((u) => u.dtg?.includes(event.id)).length;
-  const recCount = allUsers.filter((u) =>
-    u.recommended?.includes(event.artistId)
-  ).length;
+        const visibleUsers =
+        followingIds.length === 0
+            ? allUsers
+            : allUsers.filter(
+                (u) => u.uid === uid || followingIds.includes(u.uid),
+            );
+
+        const dtgCount = visibleUsers.filter((u) => u.dtg?.includes(event.id)).length;
+        const recCount = visibleUsers.filter((u) =>
+        u.recommended?.includes(event.artistId),
+        ).length;
+
   
   return (
     <div className="mx-auto max-w-lg p-8 space-y-6">

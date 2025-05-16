@@ -6,6 +6,8 @@ import {
   arrayRemove,
   onSnapshot,
   collection,
+  getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 
 /** Turn DTG ON or OFF for the current user.
@@ -61,6 +63,31 @@ export async function setRecommendFlag(opts: {
     });
   }
   
+  /** Toggle follow ↔ unfollow  */
+export async function toggleFollow(opts: {
+  uid: string;        // current user
+  targetUid: string;  // person to follow/unfollow
+}) {
+  const ref = doc(db, "users", opts.uid, "following", opts.targetUid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await deleteDoc(ref);       // unfollow
+  } else {
+    await setDoc(ref, { t: true });  // follow
+  }
+}
+
+/** Live-listen to current user's following list */
+export function listenFollowing(
+  uid: string,
+  cb: (ids: string[]) => void,
+) {
+  return onSnapshot(
+    collection(db, "users", uid, "following"),
+    (snap) => cb(snap.docs.map((d) => d.id)),
+  );
+}
+
   /** Listen to *all* users (tiny data set, fine for MVP) */
   export function listenAllUsers(cb: (users: UserDoc[]) => void) {
     return onSnapshot(collection(db, "users"), (snap) => {
