@@ -9,6 +9,7 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { listenAllUsers, UserDoc, listenFollowing } from "@/lib/userFlags";
 import { addReview, listenReviews, ReviewDoc } from "@/lib/reviews";
+import { ARTISTS } from "@/lib/artists";
 
 /** Runtime type for one event (client side only) */
 type EventView = {
@@ -17,6 +18,7 @@ type EventView = {
   venue: string;
   date: string;     // formatted for display
   artistId: string;
+  artistName: string;
 };
 
 export default function EventPage() {
@@ -60,12 +62,15 @@ const handleCopy = async () => {
       const snap = await getDoc(doc(db, "events", id));
       if (!snap.exists()) return;   // could add 404 later
       const d = snap.data();
+      const aObj = ARTISTS.find((a) => a.id === d.artistId);
+      const artistName = aObj ? aObj.name : d.artistId;
       setEvent({
         id: snap.id,
         title: d.title,
         venue: d.venue,
         date: new Date(d.date.seconds * 1000).toLocaleDateString(),
         artistId: d.artistId,
+        artistName: artistName,
       });
     }
     run();
@@ -98,7 +103,6 @@ const handleCopy = async () => {
             : allUsers.filter(
                 (u) => u.uid === uid || followingIds.includes(u.uid),
             );
-
         const dtgCount = visibleUsers.filter((u) => u.dtg?.includes(event.id)).length;
         const recCount = visibleUsers.filter((u) =>
         u.recommended?.includes(event.artistId),
@@ -106,6 +110,10 @@ const handleCopy = async () => {
         const visibleDtgUsers = visibleUsers.filter((u) =>
             u.dtg?.includes(event.id),
           );
+          const visibleRecUsers = visibleUsers.filter((u) =>
+            u.recommended?.includes(event.artistId),
+          );
+          
           
 
   
@@ -123,6 +131,16 @@ const handleCopy = async () => {
     {visibleDtgUsers.length === 1 ? "is" : "are"} DTG
   </p>
 )}
+{visibleRecUsers.length > 0 && (
+  <p className="text-sm text-gray-700">
+    {visibleRecUsers
+      .map((u) => u.displayName ?? u.uid.slice(0, 8))
+      .join(", ")}{" "}
+    {visibleRecUsers.length === 1 ? "recommends" : "recommend"}{" "}
+    {event.artistName}
+  </p>
+)}
+
 
       <p className="text-gray-700">
         {event.venue} — {event.date}
