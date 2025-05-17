@@ -103,6 +103,7 @@ export function listenFollowing(
     uid: string;
     dtg?: string[];
     recommended?: string[];
+    displayName?: string;
   };
 
 

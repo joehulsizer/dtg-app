@@ -103,6 +103,10 @@ const handleCopy = async () => {
         const recCount = visibleUsers.filter((u) =>
         u.recommended?.includes(event.artistId),
         ).length;
+        const visibleDtgUsers = visibleUsers.filter((u) =>
+            u.dtg?.includes(event.id),
+          );
+          
 
   
   return (
@@ -111,6 +115,14 @@ const handleCopy = async () => {
       <p className="text-sm text-gray-600">
   {recCount} friends recommend&nbsp;&middot;&nbsp;{dtgCount} friends DTG
 </p>
+{visibleDtgUsers.length > 0 && (
+  <p className="text-sm text-gray-700">
+    {visibleDtgUsers
+      .map((u) => u.displayName ?? u.uid.slice(0, 8))
+      .join(", ")}{" "}
+    {visibleDtgUsers.length === 1 ? "is" : "are"} DTG
+  </p>
+)}
 
       <p className="text-gray-700">
         {event.venue} — {event.date}
