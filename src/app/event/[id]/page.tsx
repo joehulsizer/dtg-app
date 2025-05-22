@@ -8,7 +8,7 @@ import { setDtgFlag, listenDtg } from "@/lib/userFlags";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { listenAllUsers, UserDoc, listenFollowing } from "@/lib/userFlags";
-import { addReview, listenReviews, ReviewDoc } from "@/lib/reviews";
+import { addReview, listenReviews, ReviewDoc, deleteReview } from "@/lib/reviews";
 import { ARTISTS } from "@/lib/artists";
 
 /** Runtime type for one event (client side only) */
@@ -31,9 +31,9 @@ export default function EventPage() {
   const [stars, setStars]   = useState(5);
   const [comment, setComment] = useState("");
   const [followingIds, setFollowingIds] = useState<string[]>([]);
-
-
   const [copied, setCopied] = useState(false);
+  const [delMsg, setDelMsg] = useState("");
+
 const handleCopy = async () => {
   await navigator.clipboard.writeText(window.location.href);
   setCopied(true);
@@ -206,15 +206,36 @@ const handleCopy = async () => {
             </form>
             )}
             <section className="mt-6 space-y-4">
-  {reviews.map((r) => (
-    <div key={r.id} className="border-b pb-2">
-      <span className="text-yellow-500">
-        {"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}
-      </span>
-      <p className="whitespace-pre-line">{r.comment}</p>
-    </div>
-  ))}
+  {reviews.map((r) => {
+    const mine = r.uid === uid;
+    return (
+      <div key={r.id} className="border-b pb-2 flex gap-2">
+        <div className="flex-1">
+          <span className="text-yellow-500">
+            {"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}
+          </span>
+          <p className="whitespace-pre-line">{r.comment}</p>
+        </div>
+
+        {mine && (
+          <button
+            onClick={async () => {
+              await deleteReview({ eventId: event.id, reviewId: r.id });
+              setDelMsg("Review deleted");
+              setTimeout(() => setDelMsg(""), 2000);
+            }}
+            className="self-start rounded bg-red-600 px-2 py-1 text-white text-xs"
+          >
+            Delete
+          </button>
+        )}
+      </div>
+    );
+  })}
+
+  {delMsg && <span className="text-sm text-green-600">{delMsg}</span>}
 </section>
+
 
 
     </div>

@@ -6,6 +6,8 @@ import {
   orderBy,
   onSnapshot,
   Timestamp,
+  deleteDoc,
+  doc
 } from "firebase/firestore";
 
 type ReviewData = Omit<ReviewDoc, "id">;
@@ -47,4 +49,11 @@ export function listenReviews(
       );
     },
   );
+}
+/** Delete one review (only if caller owns it) */
+export async function deleteReview(opts: {
+  eventId: string;
+  reviewId: string;
+}) {
+  await deleteDoc(doc(db, "events", opts.eventId, "reviews", opts.reviewId));
 }
