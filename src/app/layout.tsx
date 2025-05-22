@@ -24,11 +24,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className="bg-gray-100 text-gray-900">
+  <header
+    style={{ backgroundColor: "#1B3659" }}
+    className="text-white px-4 py-3 flex items-center gap-6 shadow-md"
+  >
+    <a href="/" className="font-bold text-lg">
+      Joe’s Reviews
+    </a>
+    <a href="/" className="hover:underline">Home</a>
+    <a href="/profile" className="hover:underline">Profile</a>
+  </header>
+  {children}
+</body>
+
     </html>
   );
 }

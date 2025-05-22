@@ -1,5 +1,8 @@
 "use client";
 
+// DO THIS IN THIS DOCUMENT:Primary actions (Save, Copy link, Follow, etc.) → use primary color Replace classes like bg-blue-600 with inline style: tsx Copy Edit style={{ backgroundColor: "#1B3659" }} className="rounded px-4 py-2 text-white" Badges (DTG on button) keep green/red since they convey semantics.
+
+
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useEffect, useState } from "react";
@@ -118,7 +121,7 @@ const handleCopy = async () => {
 
   
   return (
-    <div className="mx-auto max-w-lg p-8 space-y-6">
+    <div className="mx-auto mt-6 max-w-xl bg-white rounded-lg shadow p-8 space-y-6">
       <h1 className="text-2xl font-semibold">{event.title}</h1>
       <p className="text-sm text-gray-600">
   {recCount} friends recommend&nbsp;&middot;&nbsp;{dtgCount} friends DTG
@@ -160,7 +163,8 @@ const handleCopy = async () => {
       )}
             <button
                 onClick={handleCopy}
-                className="rounded bg-blue-600 px-4 py-2 text-white"
+                style={{ backgroundColor: "#1B3659" }}
+                className="rounded px-4 py-2 text-white"
             >
                 Copy link 📋
             </button>
@@ -200,7 +204,7 @@ const handleCopy = async () => {
                 rows={3}
                 placeholder="What stood out to you?"
                 />
-                <button className="rounded bg-blue-600 px-4 py-1.5 text-white">
+                <button style={{ backgroundColor: "#1B3659" }} className="rounded px-4 py-1.5 text-white">
                 Save
                 </button>
             </form>
@@ -224,7 +228,8 @@ const handleCopy = async () => {
               setDelMsg("Review deleted");
               setTimeout(() => setDelMsg(""), 2000);
             }}
-            className="self-start rounded bg-red-600 px-2 py-1 text-white text-xs"
+            style={{ backgroundColor: "#1B3659" }}
+            className="self-start rounded px-2 py-1 text-white text-xs"
           >
             Delete
           </button>

@@ -153,9 +153,10 @@ export default function Home() {
         return (
           <div
             key={ev.id}
-            className={`rounded border px-3 py-2 flex items-center justify-between ${
-              isDtg ? "bg-green-50 border-green-400" : ""
+            className={`rounded-lg px-4 py-3 flex items-center justify-between shadow-sm transition hover:shadow-lg bg-white border ${
+              isDtg ? "border-green-400" : "border-gray-200"
             }`}
+            
           >
             <div className="flex flex-col">
             <Link
