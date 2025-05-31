@@ -15,6 +15,7 @@ export default function Home() {
   const [dtgIds, setDtgIds] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<UserDoc[]>([]);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
@@ -60,6 +61,15 @@ export default function Home() {
         </a>
       </div>
     );
+// ---- search logic (run on every render) -----------------
+// cant read to lowercase, change the two constants below to make them work
+const normalized = query.toLowerCase();
+const filteredEvents = events.filter((ev) =>
+  [ev.title, ev.venue, ev.artistId].some((field) =>
+    field?.toLocaleLowerCase().includes(normalized.toLocaleLowerCase()) ?? false
+  )
+);
+// ---------------------------------------------------------
 
   return (
     <div className="mx-auto max-w-xl p-6 space-y-8">
@@ -90,7 +100,15 @@ export default function Home() {
           setArtistId("");
         }}
         className="grid gap-4 border p-4 rounded"
-      >
+      >{/* Search bar */}
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search events…"
+        className="w-full rounded border px-3 py-2 mb-4"
+      />
+      
         <h2 className="font-medium">Add dummy event</h2>
         <input
           required
@@ -134,7 +152,7 @@ export default function Home() {
 
       {/* Event list */}
       <section className="space-y-2">
-        {events.map((ev) => {
+        {filteredEvents.map((ev) => {
           // choose which users to include
           const visibleUsers =
           followingIds.length === 0
@@ -150,6 +168,7 @@ export default function Home() {
 
 
           const isDtg = dtgIds.includes(ev.id);
+          
         return (
           <div
             key={ev.id}
